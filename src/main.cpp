@@ -97,14 +97,14 @@ int main() {
 
           // The polynomial is fitted to a straight line so a polynomial with
           // order 1 is sufficient.
-          auto coeffs = polyfit(ptsx, ptsy, 1);
+          //auto coeffs = polyfit(ptsx, ptsy, 1);
 
           // The cross track error is calculated by evaluating at polynomial at x, f(x)
           // and subtracting y.
-          double cte = polyeval(coeffs, px) - py;
+          //double cte = polyeval(coeffs, px) - py;
           // Due to the sign starting at 0, the orientation error is -f'(x).
           // derivative of coeffs[0] + coeffs[1] * x -> coeffs[1]
-          double epsi = psi - atan(coeffs[1]);
+          //double epsi = psi - atan(coeffs[1]);
              
           VectorXd waypoints_x(ptsx.size());
           VectorXd waypoints_y(ptsx.size());
