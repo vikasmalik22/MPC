@@ -108,12 +108,12 @@ int main() {
           for (int i = 0; i < ptsx.size(); i++) {
             double dx = ptsx[i] - px;
             double dy = ptsy[i] - py;
-            waypoints_carx = dx * cos(-psi) - dy * sin(-psi);
-            waypoints_cary = dx * sin(-psi) + dy * cos(-psi);
+            waypoints_carx[i] = dx * cos(-psi) - dy * sin(-psi);
+            waypoints_cary[i] = dx * sin(-psi) + dy * cos(-psi);
           }
 
           // Fits a 3rd-order polynomial to the above x and y coordinates
-          auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
+          auto coeffs = polyfit(waypoints_carx, waypoints_cary, 3);
 
           // Calculate CTE because points were transformed to vehicle coordinates, x & y equal 0 below.
           // 'y' would otherwise be subtracted from the polyeval value
