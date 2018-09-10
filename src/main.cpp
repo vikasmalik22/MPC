@@ -91,6 +91,8 @@ int main() {
           double py = j[1]["y"];
           double psi = j[1]["psi"];
           double v = j[1]["speed"];
+          double steer_value = j[1]["steering_angle"];
+          double throttle_value = j[1]["throttle"];
 
           /*
           * TODO: Calculate steering angle and throttle using MPC.
@@ -98,34 +100,49 @@ int main() {
           * Both are in between [-1, 1].
           *
           */
+          //Waypoints in Car's co-ordinates
+          Eigen::VectorXd waypoints_carx(ptsx.size());
+          Eigen::VectorXd waypoints_cary(ptsy.size());
 
-          vector<double> waypoints_x;
-          vector<double> waypoints_y;
-
-          // transform waypoints to be from car's perspective
-          // this means we can consider px = 0, py = 0, and psi = 0
-          // greatly simplifying future calculations
+          // transform waypoints into car's perspective
           for (int i = 0; i < ptsx.size(); i++) {
             double dx = ptsx[i] - px;
             double dy = ptsy[i] - py;
-            waypoints_x.push_back(dx * cos(-psi) - dy * sin(-psi));
-            waypoints_y.push_back(dx * sin(-psi) + dy * cos(-psi));
+            waypoints_carx = dx * cos(-psi) - dy * sin(-psi);
+            waypoints_cary = dx * sin(-psi) + dy * cos(-psi);
           }
 
-          double* ptrx = &waypoints_x[0];
-          double* ptry = &waypoints_y[0];
-          Eigen::Map<Eigen::VectorXd> waypoints_x_eig(ptrx, 6);
-          Eigen::Map<Eigen::VectorXd> waypoints_y_eig(ptry, 6);
-
+          // Fits a 3rd-order polynomial to the above x and y coordinates
           auto coeffs = polyfit(waypoints_x_eig, waypoints_y_eig, 3);
-          double cte = polyeval(coeffs, 0);  // px = 0, py = 0
-          double epsi = -atan(coeffs[1]);  // p
 
-          double steer_value = j[1]["steering_angle"];
-          double throttle_value = j[1]["throttle"];
+          // Calculate CTE because points were transformed to vehicle coordinates, x & y equal 0 below.
+          // 'y' would otherwise be subtracted from the polyeval value
+          //double cte = polyeval(coeffs, x) - y;
+          double cte = polyeval(coeffs, 0); 
 
+          //Calculate the orientation error
+          //double epsi = psi - atan(coeffs[1]);
+          double epsi = -atan(coeffs[1]);  //initial value of psi = 0
+
+          // Latency for predicting time at actuation
+          const double dt = 0.1; //100ms
+
+          // Center of gravity needed related to psi and epsi
+          const double Lf = 2.67;
+
+          // Predicting state after 100ms latency
+          // x, y and psi are all zero after transformation above
+          double delayed_px = 0.0 + v * dt; 
+          double delayed_py = 0.0; 
+          double delayed_psi = 0.0 + v * -steer_value / Lf * dt;
+          double delayed_v = v + throttle_value * dt;
+          double delayed_cte = cte + v * sin(epsi) * dt;
+          double delayed_epsi = epsi + v * -steer_value / Lf * dt;
+          
+          // Feed in the predicted state values
           Eigen::VectorXd state(6);
-          state << 0, 0, 0, v, cte, epsi;
+          state << delayed_px, delayed_py, delayed_psi, delayed_v, delayed_cte, delayed_epsi;        
+
           auto vars = mpc.Solve(state, coeffs);
           steer_value = vars[0];
           throttle_value = vars[1];
@@ -133,7 +150,8 @@ int main() {
           json msgJson;
           // NOTE: Remember to divide by deg2rad(25) before you send the steering value back.
           // Otherwise the values will be in between [-deg2rad(25), deg2rad(25] instead of [-1, 1].
-          msgJson["steering_angle"] = steer_value/(deg2rad(25));
+          // Multiplying by Lf takes into account vehicle's turning ability
+          msgJson["steering_angle"] = steer_value/(deg2rad(25) * Lf);
           msgJson["throttle"] = throttle_value;
 
           //Display the MPC predicted trajectory 
@@ -143,13 +161,9 @@ int main() {
           //.. add (x,y) points to list here, points are in reference to the vehicle's coordinate system
           // the points in the simulator are connected by a Green line
 
-          for (int i = 2; i < vars.size(); i ++) {
-            if (i%2 == 0) {
+          for (int i = 2; i < vars.size(); i+=2) {
               mpc_x_vals.push_back(vars[i]);
-            }
-            else {
-              mpc_y_vals.push_back(vars[i]);
-            }
+              mpc_y_vals.push_back(vars[i+1]);
           }
 
           msgJson["mpc_x"] = mpc_x_vals;
