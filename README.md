@@ -8,7 +8,7 @@ The main goal of the project is to implement Model Predictive Control in C++ to 
 ## Reflection
 **The Model:**  Student describes their model in detail. This includes the state, actuators and update equations.
 The kinematic model includes the vehicle's x and y coordinates, orientation angle (psi), and velocity, as well as the cross-track error and psi error (epsi). Actuator outputs are acceleration and delta (steering angle). The model combines the state and actuations from the previous timestep to calculate the state for the current timestep based on the equations below:
-
+![Equations](https://github.com/vikasmalik22/MPC/blob/master/img/Equations.PNG)
 
 **Timestep Length and Elapsed Duration (N & dt):**Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
 
