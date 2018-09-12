@@ -34,7 +34,7 @@ Model accounts for the simulator's added 100ms latency between the actuator calc
 In order to account latency, it is required to predict where the vehicle would be after 100ms (0.1 seconds), in order to take the action that needed to actually be taken at that time, instead of the one in reaction to an old situation. dt value was set in main.cpp as 0.1 (100ms). Then, using the same update equations as those used in the actual MPC model, I predicted the state and fed that into the true model. Lines 131-146 in main.cpp. This new predicted state, along with the coefficients, are then fed into the mpc.Solve() function found in MPC.cpp
 
 ## Video
-MPC Final 
+[MPC Final](https://youtu.be/DEtF0svUiwk)
 
 ---
 
