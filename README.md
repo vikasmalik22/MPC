@@ -1,5 +1,35 @@
-# CarND-Controls-MPC
-Self-Driving Car Engineer Nanodegree Program
+# Model Predictive Control-Project
+Udacity Self-Driving Car Nanodegree Term 2, Project 5
+
+## Goal
+The main goal of the project is to implement Model Predictive Control in C++ to drive the car around the track. No tire should leave the drivable portion of the track surface. The car should not pop up onto ledges or roll over any surfaces that would otherwise be considered unsafe (if humans were in the vehicle). The implementation of Model Predictive Control should handle 100 millisecond latency. 
+
+
+## Reflection
+**The Model:**  Student describes their model in detail. This includes the state, actuators and update equations.
+The kinematic model includes the vehicle's x and y coordinates, orientation angle (psi), and velocity, as well as the cross-track error and psi error (epsi). Actuator outputs are acceleration and delta (steering angle). The model combines the state and actuations from the previous timestep to calculate the state for the current timestep based on the equations below:
+
+
+**Timestep Length and Elapsed Duration (N & dt):**Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
+
+I started with the values 25 for N and 0.05 for dt, because I thought 1.25 second would be a good prediction span, and I also had thought I could account for latency in this way. However, I found 0.05 to be quite slow to react, plus I began accounting for latency in the main.cpp file. I also found the model started to slow down if I increased N, so I finally used 10 for N, which meant that with 0.1 dt, I was only predicting for one second. These values mean that the optimizer is considering a one-second duration in which to determine a corrective trajectory.
+
+**Polynomial Fitting and MPC Preprocessing:**A polynomial is fitted to waypoints. If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
+
+The waypoints are preprocessed by transforming them to the vehicle's perspective (see main.cpp lines 108-113). First, each of the waypoints are adjusted by subtracting out px and py accordingly such that they are based on the vehicle's position. Next, the waypoint coordinates are changed using standard 2d vector transformation equations to be in vehicle coordinates:
+`waypoints_carx[i] = dx * cos(-psi) - dy * sin(-psi);`
+`waypoints_cary[i] = dx * sin(-psi) + dy * cos(-psi);`
+
+This simplifies the process to fit a polynomial to the waypoints because the vehicle's x and y coordinates are now at the origin (0, 0) and the orientation angle is also zero.
+
+**Model Predictive Control with Latency:**The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
+
+Model accounts for the simulator's added 100ms latency between the actuator calculation (when the model tells the car to perform a steering or acceleration/braking change) and when the simulator will actually perform that action. Without this it was difficult to turn the vehicle on time and it always goes off the track.
+
+In order to account latency, it is required to predict where the vehicle would be after 100ms (0.1 seconds), in order to take the action that needed to actually be taken at that time, instead of the one in reaction to an old situation. dt value was set in main.cpp as 0.1 (100ms). Then, using the same update equations as those used in the actual MPC model, I predicted the state and fed that into the true model. Lines 131-146 in main.cpp. This new predicted state, along with the coefficients, are then fed into the mpc.Solve() function found in MPC.cpp
+
+## Video
+MPC Final 
 
 ---
 
@@ -103,6 +133,3 @@ that's just a guess.
 
 One last note here: regardless of the IDE used, every submitted project must
 still be compilable with cmake and make./
-
-## How to write a README
-A well written README file can enhance your project and portfolio.  Develop your abilities to create professional README files by completing [this free course](https://www.udacity.com/course/writing-readmes--ud777).
