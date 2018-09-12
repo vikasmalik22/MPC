@@ -6,15 +6,19 @@ The main goal of the project is to implement Model Predictive Control in C++ to 
 
 
 ## Reflection
-**The Model:**  Student describes their model in detail. This includes the state, actuators and update equations.
+##### The Model: 
+Student describes their model in detail. This includes the state, actuators and update equations.
+
 The kinematic model includes the vehicle's x and y coordinates, orientation angle (psi), and velocity, as well as the cross-track error and psi error (epsi). Actuator outputs are acceleration and delta (steering angle). The model combines the state and actuations from the previous timestep to calculate the state for the current timestep based on the equations below:
 ![Equations](https://github.com/vikasmalik22/MPC/blob/master/img/Equations.PNG)
 
-**Timestep Length and Elapsed Duration (N & dt):**Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
+##### Timestep Length and Elapsed Duration (N & dt): 
+Student discusses the reasoning behind the chosen N (timestep length) and dt (elapsed duration between timesteps) values. Additionally the student details the previous values tried.
 
 I started with the values 25 for N and 0.05 for dt, because I thought 1.25 second would be a good prediction span, and I also had thought I could account for latency in this way. However, I found 0.05 to be quite slow to react, plus I began accounting for latency in the main.cpp file. I also found the model started to slow down if I increased N, so I finally used 10 for N, which meant that with 0.1 dt, I was only predicting for one second. These values mean that the optimizer is considering a one-second duration in which to determine a corrective trajectory.
 
-**Polynomial Fitting and MPC Preprocessing:**A polynomial is fitted to waypoints. If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
+##### Polynomial Fitting and MPC Preprocessing:
+A polynomial is fitted to waypoints. If the student preprocesses waypoints, the vehicle state, and/or actuators prior to the MPC procedure it is described.
 
 The waypoints are preprocessed by transforming them to the vehicle's perspective (see main.cpp lines 108-113). First, each of the waypoints are adjusted by subtracting out px and py accordingly such that they are based on the vehicle's position. Next, the waypoint coordinates are changed using standard 2d vector transformation equations to be in vehicle coordinates:
 `waypoints_carx[i] = dx * cos(-psi) - dy * sin(-psi);`
@@ -22,7 +26,8 @@ The waypoints are preprocessed by transforming them to the vehicle's perspective
 
 This simplifies the process to fit a polynomial to the waypoints because the vehicle's x and y coordinates are now at the origin (0, 0) and the orientation angle is also zero.
 
-**Model Predictive Control with Latency:**The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
+##### Model Predictive Control with Latency:
+The student implements Model Predictive Control that handles a 100 millisecond latency. Student provides details on how they deal with latency.
 
 Model accounts for the simulator's added 100ms latency between the actuator calculation (when the model tells the car to perform a steering or acceleration/braking change) and when the simulator will actually perform that action. Without this it was difficult to turn the vehicle on time and it always goes off the track.
 
